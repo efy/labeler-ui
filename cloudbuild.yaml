@@ -1,0 +1,28 @@
+  steps:
+  # Build the container image
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['build', '-t', 'gcr.io/$PROJECT_ID/$_SERVICE_NAME:$COMMIT_SHA', '.']
+  # Push the container image to Container Registry
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['push', 'gcr.io/$PROJECT_ID/$_SERVICE_NAME:$COMMIT_SHA']
+  # Deploy container image to Cloud Run
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    entrypoint: gcloud
+    args:
+    - 'run'
+    - 'deploy'
+    - '$_SERVICE_NAME'
+    - '--image'
+    - 'gcr.io/$PROJECT_ID/$_SERVICE_NAME:$COMMIT_SHA'
+    - '--region'
+    - 'europe-west1'
+    - '--allow-unauthenticated'
+    - '--set-env-vars' 
+    - 'REPLICA_URL=${_REPLICA_URL},HTTP_AUTH_USERNAME=${_HTTP_AUTH_USERNAME},HTTP_AUTH_PASSWORD=${_HTTP_AUTH_PASSWORD}'
+substitutions:
+  _REPLICA_URL: gsurl
+  _HTTP_AUTH_USERNAME: ""
+  _HTTP_AUTH_PASSWORD: ""
+  _SERVICE_NAME: ""
+images:
+- 'gcr.io/$PROJECT_ID/$_SERVICE_NAME:$COMMIT_SHA'
